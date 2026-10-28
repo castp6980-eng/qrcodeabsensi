@@ -65,7 +65,7 @@ input[type=url]{width:100%;padding:10px;margin-top:10px;border-radius:10px;borde
 </div>
 </main>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const $=id=>document.getElementById(id);
@@ -138,14 +138,25 @@ function stop(){
   if(stream)stream.getTracks().forEach(t=>t.stop());
   stream=null;vid.srcObject=null;$('cam').classList.remove('on');$('bCam').textContent='Mulai scan';
 }
-function loop(){
+const bd=('BarcodeDetector' in window)?new BarcodeDetector({formats:['qr_code']}):null;
+let warned=false;
+async function loop(){
   if(vid.readyState===4&&vid.videoWidth){
-    const s=Math.min(1,640/vid.videoWidth);
-    cv.width=Math.round(vid.videoWidth*s);cv.height=Math.round(vid.videoHeight*s);
-    cx.drawImage(vid,0,0,cv.width,cv.height);
-    const im=cx.getImageData(0,0,cv.width,cv.height);
-    const c=jsQR(im.data,im.width,im.height,{inversionAttempts:'dontInvert'});
-    if(c&&c.data)handle(c.data);
+    try{
+      if(bd){
+        const r=await bd.detect(vid);
+        if(r.length&&r[0].rawValue)handle(r[0].rawValue);
+      }else if(window.jsQR){
+        const s=Math.min(1,640/vid.videoWidth);
+        cv.width=Math.round(vid.videoWidth*s);cv.height=Math.round(vid.videoHeight*s);
+        cx.drawImage(vid,0,0,cv.width,cv.height);
+        const im=cx.getImageData(0,0,cv.width,cv.height);
+        const c=jsQR(im.data,im.width,im.height,{inversionAttempts:'dontInvert'});
+        if(c&&c.data)handle(c.data);
+      }else if(!warned){
+        warned=true;show('Pustaka pemindai gagal dimuat. Periksa internet lalu muat ulang halaman.','er');
+      }
+    }catch(e){}
   }
   raf=requestAnimationFrame(loop);
 }
