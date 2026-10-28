@@ -3,67 +3,127 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#060a18">
 <title>Absensi QR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f5f6fa;--card:#fff;--tx:#1b1f2a;--mut:#6b7280;--bd:#e3e6ee;--pri:#2f5bea;--prit:#fff;--ok:#12805c;--okb:#e3f6ee;--er:#b42318;--erb:#fdeceb;--wr:#8a5a00;--wrb:#fff4d6}
-@media (prefers-color-scheme:dark){:root{--bg:#12141a;--card:#1c1f28;--tx:#eceef4;--mut:#9aa1b2;--bd:#2c3140;--pri:#6c8cff;--prit:#0d1020;--ok:#5ad6a6;--okb:#12302a;--er:#ff8d84;--erb:#3a1a18;--wr:#ffd47a;--wrb:#3a2d0c}}
+:root{--bg:#060a18;--s1:rgba(255,255,255,.045);--s2:rgba(255,255,255,.08);--bd:rgba(140,170,255,.16);--tx:#e9eeff;--mut:#8d98bd;--c1:#46e6ff;--c2:#8b6cff;--ok:#5dffb2;--wr:#ffc857;--er:#ff7a8a;color-scheme:dark}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-main{max-width:640px;margin:0 auto;padding:16px 16px 40px}
-h1{font-size:1.35rem;margin:6px 0 2px}
-.st{font-size:.85rem;color:var(--mut);margin:0 0 14px}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:14px}
-.cam{position:relative;border-radius:12px;overflow:hidden;background:#000;aspect-ratio:1/1;display:none}
-.cam.on{display:block}
-.cam video{width:100%;height:100%;object-fit:cover}
+html{background:var(--bg)}
+body{margin:0;min-height:100vh;color:var(--tx);font-family:"DM Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5;
+background:radial-gradient(60% 38% at 85% -4%,rgba(139,108,255,.30),transparent 70%),radial-gradient(55% 34% at -5% 8%,rgba(70,230,255,.18),transparent 70%),var(--bg);
+padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+main{max-width:560px;margin:0 auto;padding:18px 16px 44px}
+:focus-visible{outline:2px solid var(--c1);outline-offset:2px}
+
+.top{display:flex;align-items:center;gap:12px;margin:4px 0 18px}
+.logo{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--c1),var(--c2));display:grid;place-items:center;box-shadow:0 0 24px rgba(70,230,255,.35);flex:none}
+.logo svg{width:24px;height:24px}
+h1{font:600 1.35rem/1.15 Sora,"DM Sans",sans-serif;margin:0;letter-spacing:-.01em}
+.pill{display:inline-flex;align-items:center;gap:7px;font-size:.8rem;color:var(--mut);margin-top:3px}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--wr);box-shadow:0 0 10px var(--wr)}
+.pill[data-on="1"] i{background:var(--ok);box-shadow:0 0 10px var(--ok)}
+
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:24px;padding:14px;margin-bottom:14px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+
+.cam{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:1/1;max-height:62vh;width:100%;margin:0 auto;background:linear-gradient(160deg,#0b1230,#0a0d22);border:1px solid var(--bd)}
+.cam video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
+.cam.on video{display:block}
 .cam video.mirror{transform:scaleX(-1)}
-.cam i{position:absolute;inset:18%;border:3px solid #fff;border-radius:14px;opacity:.7;pointer-events:none}
-button{font:inherit;border:0;border-radius:10px;padding:11px 16px;cursor:pointer;background:var(--pri);color:var(--prit);font-weight:600}
-button.sec{background:transparent;color:var(--pri);border:1px solid var(--pri)}
-.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.idle{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:10px;color:var(--mut);font-size:.9rem;text-align:center;padding:0 24px}
+.idle svg{width:46px;height:46px;opacity:.7}
+.cam.on .idle{display:none}
+.vf{position:absolute;inset:15%;pointer-events:none}
+.vf b{position:absolute;width:30px;height:30px;border:3px solid var(--c1);filter:drop-shadow(0 0 6px rgba(70,230,255,.7))}
+.vf b:nth-child(1){left:0;top:0;border-right:0;border-bottom:0;border-top-left-radius:14px}
+.vf b:nth-child(2){right:0;top:0;border-left:0;border-bottom:0;border-top-right-radius:14px}
+.vf b:nth-child(3){left:0;bottom:0;border-right:0;border-top:0;border-bottom-left-radius:14px}
+.vf b:nth-child(4){right:0;bottom:0;border-left:0;border-top:0;border-bottom-right-radius:14px}
+.ln{position:absolute;left:14%;right:14%;top:50%;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,var(--c1),var(--c2),transparent);box-shadow:0 0 16px 2px rgba(70,230,255,.6);display:none}
+.cam.on .ln{display:block;animation:sweep 2.4s ease-in-out infinite alternate}
+@keyframes sweep{from{top:17%}to{top:83%}}
+.vf{transition:inset .35s ease}
+.cam.lock .vf{inset:23%}
+.cam.lock .vf b{border-color:var(--ok);filter:drop-shadow(0 0 8px rgba(93,255,178,.85))}
+.cam.on.lock .ln{top:50%;background:linear-gradient(90deg,transparent,var(--ok),transparent);box-shadow:0 0 18px 3px rgba(93,255,178,.6);animation:beat .55s ease-in-out infinite alternate}
+@keyframes beat{from{opacity:.35;transform:scaleX(.6)}to{opacity:1;transform:scaleX(1)}}
+.scn{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:none;align-items:center;gap:9px;padding:8px 16px;border-radius:999px;background:rgba(6,10,24,.78);border:1px solid rgba(93,255,178,.45);color:var(--ok);font-weight:600;font-size:.9rem;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);white-space:nowrap}
+.cam.lock .scn{display:flex}
+.sp{width:15px;height:15px;border-radius:50%;border:2.5px solid rgba(93,255,178,.3);border-top-color:var(--ok);animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.cam.on .ln,.cam.on.lock .ln,.sp{animation:none}.vf{transition:none}}
+
+.res{margin-top:12px;padding:13px 15px;border-radius:16px;display:none;font-weight:600;border:1px solid transparent}
+.res small{display:block;font-weight:400;opacity:.85;margin-top:1px}
+.res.ok{display:block;color:var(--ok);background:rgba(93,255,178,.10);border-color:rgba(93,255,178,.35)}
+.res.warn{display:block;color:var(--wr);background:rgba(255,200,87,.10);border-color:rgba(255,200,87,.35)}
+.res.er{display:block;color:var(--er);background:rgba(255,122,138,.10);border-color:rgba(255,122,138,.35)}
+
+button{font:600 .95rem "DM Sans",sans-serif;border:0;border-radius:14px;padding:13px 16px;cursor:pointer;color:#05101f;background:linear-gradient(120deg,var(--c1),var(--c2));box-shadow:0 6px 22px rgba(100,130,255,.35);transition:transform .12s,box-shadow .12s}
+button:active{transform:scale(.98)}
+button.sec{color:var(--tx);background:var(--s2);border:1px solid var(--bd);box-shadow:none}
+.acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
 .acts button{flex:1;min-width:130px}
-.res{margin-top:10px;padding:12px 14px;border-radius:10px;display:none;font-weight:600}
-.res.ok{display:block;background:var(--okb);color:var(--ok)}
-.res.warn{display:block;background:var(--wrb);color:var(--wr)}
-.res.er{display:block;background:var(--erb);color:var(--er)}
-.res small{display:block;font-weight:400;opacity:.9}
-h2{font-size:1rem;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
-.tw{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:.88rem}
-th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--bd);white-space:nowrap}
-th{color:var(--mut);font-weight:500}
-details summary{cursor:pointer;font-weight:600}
-input[type=url]{width:100%;padding:10px;margin-top:10px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font-size:.95rem}
-.hint{font-size:.82rem;color:var(--mut);margin:8px 0 0}
+
+.head{display:flex;align-items:flex-end;justify-content:space-between;margin:2px 4px 10px}
+.big{font:700 2.6rem/1 Sora,sans-serif;letter-spacing:-.03em}
+.lbl{color:var(--mut);font-size:.85rem}
+.list{display:grid;gap:8px;max-height:46vh;overflow-y:auto}
+.it{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:16px;background:var(--s1);border:1px solid var(--bd)}
+.av{width:38px;height:38px;border-radius:12px;flex:none;display:grid;place-items:center;font:600 .85rem Sora,sans-serif;color:#05101f;background:linear-gradient(135deg,var(--c1),var(--c2))}
+.nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb{font-size:.8rem;color:var(--mut)}
+.it>div:nth-child(2){flex:1;min-width:0}
+.chip{font-size:.75rem;font-weight:600;padding:4px 10px;border-radius:999px;border:1px solid var(--bd);color:var(--mut);white-space:nowrap}
+.chip.ok{color:var(--ok);border-color:rgba(93,255,178,.4)}
+.chip.wr{color:var(--wr);border-color:rgba(255,200,87,.4)}
+.empty{padding:22px 10px;text-align:center;color:var(--mut);font-size:.9rem}
+
+details summary{cursor:pointer;font-weight:600;padding:2px 4px;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:"+";color:var(--c1);font-size:1.3rem;line-height:1}
+details[open] summary::after{content:"\2212"}
+input[type=url]{width:100%;padding:13px;margin-top:12px;border-radius:14px;border:1px solid var(--bd);background:rgba(0,0,0,.28);color:var(--tx);font:inherit;font-size:.92rem}
+input[type=url]:focus{outline:2px solid var(--c1);border-color:transparent}
+.hint{font-size:.82rem;color:var(--mut);margin:10px 4px 0}
 </style>
 </head>
 <body>
 <main>
-<h1>Absensi QR</h1>
-<p class="st" id="st"></p>
+<header class="top">
+  <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#05101f" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/><path d="M8 12h8"/></svg></div>
+  <div><h1>Absensi QR</h1><div class="pill" id="pill" data-on="0"><i></i><span id="st"></span></div></div>
+</header>
 
-<div class="card">
-  <div class="cam" id="cam"><video id="v" playsinline muted></video><i></i></div>
+<section class="card">
+  <div class="cam" id="cam">
+    <video id="v" playsinline muted></video>
+    <div class="idle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>Kamera mati. Tekan Mulai scan untuk membaca QR siswa.</div>
+    <div class="vf"><b></b><b></b><b></b><b></b></div><div class="ln"></div><div class="scn" role="status"><span class="sp"></span>Memindai…</div>
+  </div>
   <div class="res" id="res" role="status"></div>
   <div class="acts"><button id="bCam" type="button">Mulai scan</button><button class="sec" id="bFlip" type="button">Kamera depan</button></div>
-</div>
+</section>
 
-<div class="card">
-  <h2><span>Hadir hari ini: <span id="cnt">0</span></span></h2>
-  <div class="tw"><table><thead><tr><th>Waktu</th><th>Nama</th><th>Kelas</th><th>Status</th></tr></thead><tbody id="tb"></tbody></table></div>
+<section class="card">
+  <div class="head"><div><div class="big" id="cnt">0</div><div class="lbl">Hadir hari ini</div></div></div>
+  <div class="list" id="list"></div>
   <div class="acts">
     <button class="sec" id="bRe" type="button">Kirim ulang tertunda</button>
     <button id="bXl" type="button">Unduh Excel</button>
   </div>
-</div>
+</section>
 
-<div class="card">
+<section class="card">
   <details id="det"><summary>Pengaturan Google Sheets</summary>
-    <input type="url" id="url" placeholder="https://script.google.com/macros/s/AKfycbwF0JJm6JuEy26B4u8Dgn-i84u2k7bqs8j3IErFXHeuQVbidndTLuUmDRH8sD4s7SDTVw/exec" autocomplete="off">
+    <input type="url" id="url" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
     <div class="acts"><button id="bSave" type="button">Simpan</button></div>
-    <p class="hint">Tempel URL Web App dari Google Apps Script. Kosongkan untuk mode lokal (data hanya tersimpan di perangkat ini dan bisa diunduh sebagai Excel).</p>
+    <p class="hint">Tempel URL Web App dari Google Apps Script. Kosongkan untuk mode lokal: data hanya tersimpan di perangkat ini dan bisa diunduh sebagai Excel.</p>
   </details>
-</div>
+</section>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
@@ -90,16 +150,26 @@ function parse(t){
   return o;
 }
 
+function initials(n){const p=n.trim().split(/\s+/);return ((p[0]||'?')[0]+(p.length>1?p[p.length-1][0]:'')).toUpperCase()}
+
 function render(){
   const day=log.filter(r=>r.tgl===today());
   $('cnt').textContent=day.length;
-  const tb=$('tb');tb.innerHTML='';
+  const ls=$('list');ls.innerHTML='';
+  if(!day.length){const e=document.createElement('div');e.className='empty';e.textContent='Belum ada yang absen. Mulai scan untuk mencatat kehadiran.';ls.appendChild(e)}
   day.forEach(r=>{
-    const tr=document.createElement('tr');
-    [r.waktu,r.nama,r.kelas,url?(r.sent?'✓ Terkirim':'⏳ Tertunda'):'Lokal'].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.appendChild(td)});
-    tb.appendChild(tr);
+    const it=document.createElement('div');it.className='it';
+    const av=document.createElement('div');av.className='av';av.textContent=initials(r.nama||'?');
+    const mid=document.createElement('div');
+    const nm=document.createElement('div');nm.className='nm';nm.textContent=r.nama||r.nis;
+    const sb=document.createElement('div');sb.className='sb';sb.textContent=[r.kelas,r.waktu].filter(Boolean).join(' \u00b7 ');
+    mid.append(nm,sb);
+    const ch=document.createElement('span');ch.className='chip'+(url?(r.sent?' ok':' wr'):'');
+    ch.textContent=url?(r.sent?'Terkirim':'Tertunda'):'Lokal';
+    it.append(av,mid,ch);ls.appendChild(it);
   });
-  $('st').textContent=url?'Terhubung ke Google Sheets':'Mode lokal: belum terhubung ke Google Sheets';
+  $('st').textContent=url?'Terhubung ke Google Sheets':'Mode lokal, belum terhubung ke Sheets';
+  $('pill').dataset.on=url?'1':'0';
 }
 
 async function kirim(r){
@@ -111,21 +181,28 @@ async function kirim(r){
   persist();render();
 }
 
-let lastT='',lastAt=0;
+let lastT='',lastAt=0,busy=false;
 function handle(text){
+  if(busy)return;
   if(text===lastT&&Date.now()-lastAt<3000)return;
-  lastT=text;lastAt=Date.now();
+  busy=true;lastT=text;
+  $('cam').classList.add('lock');
+  setTimeout(()=>{
+    try{proses(text)}finally{$('cam').classList.remove('lock');busy=false;lastAt=Date.now()}
+  },800);
+}
+function proses(text){
   const d=parse(text);
   if(!d.nama&&!d.nis){show('QR tidak dikenali','er',text.slice(0,60));return}
   const key=d.nisn||d.nis||d.nama;
   if(log.some(r=>r.key===key&&r.tgl===today())){show(d.nama+' sudah absen hari ini','warn');return}
   const r={...d,key,tgl:today(),waktu:new Date().toLocaleTimeString('id-ID'),sent:false};
   log.unshift(r);persist();render();
-  show('Hadir: '+d.nama,'ok',[d.kelas,d.sekolah].filter(Boolean).join(' · '));
+  show('Hadir: '+d.nama,'ok',[d.kelas,d.sekolah].filter(Boolean).join(' \u00b7 '));
   beep();kirim(r);
 }
 
-let stream=null,raf=0;
+let stream=null,raf=0,facing='environment';
 const vid=$('v'),cv=document.createElement('canvas'),cx=cv.getContext('2d',{willReadFrequently:true});
 async function start(){
   try{
@@ -133,7 +210,7 @@ async function start(){
     vid.classList.toggle('mirror',facing==='user');
     vid.srcObject=stream;await vid.play();
     $('cam').classList.add('on');$('bCam').textContent='Matikan kamera';loop();
-  }catch(e){show('Kamera tidak bisa diakses: '+(e.message||e.name),'er','Izinkan kamera, dan buka halaman lewat https atau Chrome.')}
+  }catch(e){show('Kamera tidak bisa diakses: '+(e.message||e.name),'er','Izinkan akses kamera, lalu buka halaman lewat https atau Chrome.')}
 }
 function stop(){
   cancelAnimationFrame(raf);
@@ -170,7 +247,6 @@ function excel(){
   a.href=u;a.download='absensi_'+today()+'.xlsx';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),3000);
 }
 
-let facing='environment';
 $('bFlip').onclick=async()=>{
   facing=facing==='user'?'environment':'user';
   $('bFlip').textContent=facing==='user'?'Kamera belakang':'Kamera depan';
