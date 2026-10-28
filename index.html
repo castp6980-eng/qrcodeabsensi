@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Absensi QR</title>
+<style>
+:root{--bg:#f5f6fa;--card:#fff;--tx:#1b1f2a;--mut:#6b7280;--bd:#e3e6ee;--pri:#2f5bea;--prit:#fff;--ok:#12805c;--okb:#e3f6ee;--er:#b42318;--erb:#fdeceb;--wr:#8a5a00;--wrb:#fff4d6}
+@media (prefers-color-scheme:dark){:root{--bg:#12141a;--card:#1c1f28;--tx:#eceef4;--mut:#9aa1b2;--bd:#2c3140;--pri:#6c8cff;--prit:#0d1020;--ok:#5ad6a6;--okb:#12302a;--er:#ff8d84;--erb:#3a1a18;--wr:#ffd47a;--wrb:#3a2d0c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+main{max-width:640px;margin:0 auto;padding:16px 16px 40px}
+h1{font-size:1.35rem;margin:6px 0 2px}
+.st{font-size:.85rem;color:var(--mut);margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:14px}
+.cam{position:relative;border-radius:12px;overflow:hidden;background:#000;aspect-ratio:1/1;display:none}
+.cam.on{display:block}
+.cam video{width:100%;height:100%;object-fit:cover}
+.cam i{position:absolute;inset:18%;border:3px solid #fff;border-radius:14px;opacity:.7;pointer-events:none}
+button{font:inherit;border:0;border-radius:10px;padding:11px 16px;cursor:pointer;background:var(--pri);color:var(--prit);font-weight:600}
+button.sec{background:transparent;color:var(--pri);border:1px solid var(--pri)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.acts button{flex:1;min-width:130px}
+.res{margin-top:10px;padding:12px 14px;border-radius:10px;display:none;font-weight:600}
+.res.ok{display:block;background:var(--okb);color:var(--ok)}
+.res.warn{display:block;background:var(--wrb);color:var(--wr)}
+.res.er{display:block;background:var(--erb);color:var(--er)}
+.res small{display:block;font-weight:400;opacity:.9}
+h2{font-size:1rem;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--bd);white-space:nowrap}
+th{color:var(--mut);font-weight:500}
+details summary{cursor:pointer;font-weight:600}
+input[type=url]{width:100%;padding:10px;margin-top:10px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font-size:.95rem}
+.hint{font-size:.82rem;color:var(--mut);margin:8px 0 0}
+</style>
+</head>
+<body>
+<main>
+<h1>Absensi QR</h1>
+<p class="st" id="st"></p>
+
+<div class="card">
+  <div class="cam" id="cam"><video id="v" playsinline muted></video><i></i></div>
+  <div class="res" id="res" role="status"></div>
+  <div class="acts"><button id="bCam" type="button">Mulai scan</button></div>
+</div>
+
+<div class="card">
+  <h2><span>Hadir hari ini: <span id="cnt">0</span></span></h2>
+  <div class="tw"><table><thead><tr><th>Waktu</th><th>Nama</th><th>Kelas</th><th>Status</th></tr></thead><tbody id="tb"></tbody></table></div>
+  <div class="acts">
+    <button class="sec" id="bRe" type="button">Kirim ulang tertunda</button>
+    <button id="bXl" type="button">Unduh Excel</button>
+  </div>
+</div>
+
+<div class="card">
+  <details id="det"><summary>Pengaturan Google Sheets</summary>
+    <input type="url" id="url" placeholder="https://script.google.com/macros/s/AKfycbzRiUOlEm7q9S0jR7kl-2pfJ1bGwnNWtuPV25FB_LjNVJSiDDD6W_cjkFYNvPKnRmRCog/exec" autocomplete="off">
+    <div class="acts"><button id="bSave" type="button">Simpan</button></div>
+    <p class="hint">Tempel URL Web App dari Google Apps Script. Kosongkan untuk mode lokal (data hanya tersimpan di perangkat ini dan bisa diunduh sebagai Excel).</p>
+  </details>
+</div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const today=()=>new Date().toLocaleDateString('sv-SE');
+let log=[],url='';
+try{log=JSON.parse(localStorage.getItem('absen_log')||'[]');url=localStorage.getItem('absen_url')||''}catch(e){}
+log=log.filter(r=>r.tgl===today()||!r.sent);
+const persist=()=>{try{localStorage.setItem('absen_log',JSON.stringify(log))}catch(e){}};
+
+function show(t,c,sub){const r=$('res');r.className='res '+c;r.textContent=t;if(sub){const s=document.createElement('small');s.textContent=sub;r.appendChild(s)}}
+function beep(){try{const a=new (window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator();o.frequency.value=880;o.connect(a.destination);o.start();o.stop(a.currentTime+.12)}catch(e){}if(navigator.vibrate)navigator.vibrate(80)}
+
+function parse(t){
+  const o={nama:'',nis:'',nisn:'',kelas:'',sekolah:''};
+  if(/^\s*nama\s*:/im.test(t)){
+    t.split(/\r?\n/).forEach(l=>{const m=l.match(/^\s*([^:]+):\s*(.*)$/);if(m){const k=m[1].trim().toLowerCase();if(k in o)o[k]=m[2].trim()}});
+  }else{
+    const p=t.split('|').map(s=>s.trim());
+    [o.nama,o.nis,o.nisn,o.kelas,o.sekolah]=[p[0]||'',p[1]||'',p[2]||'',p[3]||'',p[4]||''];
+  }
+  return o;
+}
+
+function render(){
+  const day=log.filter(r=>r.tgl===today());
+  $('cnt').textContent=day.length;
+  const tb=$('tb');tb.innerHTML='';
+  day.forEach(r=>{
+    const tr=document.createElement('tr');
+    [r.waktu,r.nama,r.kelas,url?(r.sent?'✓ Terkirim':'⏳ Tertunda'):'Lokal'].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.appendChild(td)});
+    tb.appendChild(tr);
+  });
+  $('st').textContent=url?'Terhubung ke Google Sheets':'Mode lokal: belum terhubung ke Google Sheets';
+}
+
+async function kirim(r){
+  if(!url)return;
+  try{
+    await fetch(url,{method:'POST',mode:'no-cors',body:JSON.stringify({tanggal:r.tgl,waktu:r.waktu,nama:r.nama,nis:r.nis,nisn:r.nisn,kelas:r.kelas,sekolah:r.sekolah})});
+    r.sent=true;
+  }catch(e){r.sent=false}
+  persist();render();
+}
+
+let lastT='',lastAt=0;
+function handle(text){
+  if(text===lastT&&Date.now()-lastAt<3000)return;
+  lastT=text;lastAt=Date.now();
+  const d=parse(text);
+  if(!d.nama&&!d.nis){show('QR tidak dikenali','er',text.slice(0,60));return}
+  const key=d.nisn||d.nis||d.nama;
+  if(log.some(r=>r.key===key&&r.tgl===today())){show(d.nama+' sudah absen hari ini','warn');return}
+  const r={...d,key,tgl:today(),waktu:new Date().toLocaleTimeString('id-ID'),sent:false};
+  log.unshift(r);persist();render();
+  show('Hadir: '+d.nama,'ok',[d.kelas,d.sekolah].filter(Boolean).join(' · '));
+  beep();kirim(r);
+}
+
+let stream=null,raf=0;
+const vid=$('v'),cv=document.createElement('canvas'),cx=cv.getContext('2d',{willReadFrequently:true});
+async function start(){
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    vid.srcObject=stream;await vid.play();
+    $('cam').classList.add('on');$('bCam').textContent='Matikan kamera';loop();
+  }catch(e){show('Kamera tidak bisa diakses: '+(e.message||e.name),'er','Izinkan kamera, dan buka halaman lewat https atau Chrome.')}
+}
+function stop(){
+  cancelAnimationFrame(raf);
+  if(stream)stream.getTracks().forEach(t=>t.stop());
+  stream=null;vid.srcObject=null;$('cam').classList.remove('on');$('bCam').textContent='Mulai scan';
+}
+function loop(){
+  if(vid.readyState===4&&vid.videoWidth){
+    const s=Math.min(1,640/vid.videoWidth);
+    cv.width=Math.round(vid.videoWidth*s);cv.height=Math.round(vid.videoHeight*s);
+    cx.drawImage(vid,0,0,cv.width,cv.height);
+    const im=cx.getImageData(0,0,cv.width,cv.height);
+    const c=jsQR(im.data,im.width,im.height,{inversionAttempts:'dontInvert'});
+    if(c&&c.data)handle(c.data);
+  }
+  raf=requestAnimationFrame(loop);
+}
+
+function excel(){
+  const rows=[['Tanggal','Waktu','Nama','NIS','NISN','Kelas','Sekolah']].concat(log.slice().reverse().map(r=>[r.tgl,r.waktu,r.nama,r.nis,r.nisn,r.kelas,r.sekolah]));
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Absensi');
+  const b=new Blob([XLSX.write(wb,{type:'array',bookType:'xlsx'})]),u=URL.createObjectURL(b),a=document.createElement('a');
+  a.href=u;a.download='absensi_'+today()+'.xlsx';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),3000);
+}
+
+$('bCam').onclick=()=>stream?stop():start();
+$('bXl').onclick=excel;
+$('bRe').onclick=async()=>{if(!url){show('Isi URL Google Sheets dulu di Pengaturan.','warn');return}for(const r of log.filter(r=>!r.sent))await kirim(r);show('Selesai mengirim ulang data tertunda.','ok')};
+$('bSave').onclick=()=>{url=$('url').value.trim();try{localStorage.setItem('absen_url',url)}catch(e){}render();show(url?'URL tersimpan.':'Mode lokal aktif.','ok');$('det').open=false};
+$('url').value=url;
+render();
+</script>
+</body>
+</html>
